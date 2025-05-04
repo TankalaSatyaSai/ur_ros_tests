@@ -24,15 +24,15 @@ services:
     image: ur_driver:base
     build: 
       context: .
-      dockerfile: ./docker/dockerfile
+      dockerfile: docker/Dockerfile
       args:
         ROS_DISTRO: ${ROS_DISTRO:?}
       target: base
     stdin_open: true
-    tty: open
+    tty: true
     networks:
       ursim_net:
-        ipv4_address: 192.168.56.100      
+        ipv4_address: 192.168.56.80      
     privileged: true
     environment:
       - DISPLAY=${DISPLAY}
@@ -46,6 +46,9 @@ services:
   ur_driver_overlay:
     extends: ur_driver_base
     image: ur_driver:overlay
+    networks:
+      ursim_net:
+        ipv4_address: 192.168.56.81 
     build:
       context: .
       dockerfile: docker/Dockerfile
@@ -54,6 +57,9 @@ services:
   ur_driver_dev:
     extends: ur_driver_overlay
     image: ur_driver:dev
+    networks:
+      ursim_net:
+        ipv4_address: 192.168.56.82 
     build:
       context: .
       dockerfile: docker/Dockerfile
@@ -73,27 +79,27 @@ services:
     user: ${USERNAME:-devuser}
     command: sleep infinity
 
-  demo-world:
-    extends: ur_driver_overlay
-    command: ros2 launch ur_worlds ur_demo_world.launch.py
+  # demo-world:
+  #   extends: ur_driver_overlay
+  #   command: ros2 launch ur_worlds ur_demo_world.launch.py
 
   # Behavior demo using Python and py_trees
-  demo-behavior-py:
-    extends: ur_driver_overlay
-    command: >
-      ros2 launch ur_autonomy ur_demo_behavior_py.launch.py
-      tree_type:=${BT_TYPE:?}
-      enable_vision:=${ENABLE_VISION:?}
-      target_color:=${TARGET_COLOR:?}
+  # demo-behavior-py:
+  #   extends: ur_driver_overlay
+  #   command: >
+  #     ros2 launch ur_autonomy ur_demo_behavior_py.launch.py
+  #     tree_type:=${BT_TYPE:?}
+  #     enable_vision:=${ENABLE_VISION:?}
+  #     target_color:=${TARGET_COLOR:?}
 
   # Behavior demo using C++ and BehaviorTree.CPP
-  demo-behavior-cpp:
-    extends: ur_driver_overlay
-    command: >
-      ros2 launch ur_autonomy ur_demo_behavior_cpp.launch.py
-      tree_type:=${BT_TYPE:?}
-      enable_vision:=${ENABLE_VISION:?}
-      target_color:=${TARGET_COLOR:?}  
+  # demo-behavior-cpp:
+  #   extends: ur_driver_overlay
+  #   command: >
+  #     ros2 launch ur_autonomy ur_demo_behavior_cpp.launch.py
+  #     tree_type:=${BT_TYPE:?}
+  #     enable_vision:=${ENABLE_VISION:?}
+  #     target_color:=${TARGET_COLOR:?}  
 
   browser:
     image: jlesage/firefox

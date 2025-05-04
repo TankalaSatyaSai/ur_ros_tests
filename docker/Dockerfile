@@ -4,7 +4,7 @@ ARG ROS_DISTRO="jazzy"
 # Base Image for UR Simulation and Tests #
 ##########################################
 
-FROM osrf/ros:${ROS_DISTRO}-desktop AS base
+FROM ros:${ROS_DISTRO} AS base
 
 LABEL maintainer="TankalaSatyaSai<satyasai2004.edu@gmail.com"
 
@@ -34,7 +34,7 @@ RUN vcs import < dependancies.repos
 WORKDIR /ur_ws
 RUN source /opt/ros/${ROS_DISTRO}/setup.bash && \
     apt-get update -y && \
-    rosdep install --from-paths src --ignore-src --ros-distro ${ROS_DISTRO} -y && \
+    rosdep install --from-paths src --ignore-src --rosdistro ${ROS_DISTRO} -y && \
     colcon build --symlink-install 
 
 # Download Groot2 AppImage and place it in the home folder    
@@ -49,7 +49,7 @@ ENV NO_AT_BRIDGE=1
 
 WORKDIR /ur_ws
 COPY ./docker/entrypoint.sh /
-ENTRYPOINT [ "entrypoint.sh" ]
+ENTRYPOINT [ "/entrypoint.sh" ]
 
 ##########################################
 # Overlay Image for TurtleBot Simulation #
@@ -65,13 +65,13 @@ RUN source /ur_ws/install/setup.bash && \
     colcon build --symlink-install
 
 COPY ./docker/entrypoint.sh /
-ENTRYPOINT [ "/entrypoint.sh" ]    
+ENTRYPOINT [ "/entrypoint.sh" ] 
 
 #####################
 # Development Image #
 #####################
 
-FROM overlay AS dev
+FROM overlay AS dev 
 
 ARG USERNAME=devuser
 ARG UID=1000
