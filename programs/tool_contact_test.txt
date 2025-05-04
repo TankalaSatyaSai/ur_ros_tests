@@ -1,0 +1,13 @@
+ Program
+   Variables Setup
+   Robot Program
+     MoveL
+       Waypoint_1
+       Direction: Tool X+
+         Until (tool_contact_detection)
+           var_1≔get_actual_tcp_pose()
+     MoveL
+       Waypoint_2
+       Direction: Tool X+
+         Until (tool_contact_detection)
+           var_2≔get_actual_tcp_pose()

@@ -1,0 +1,119 @@
+services:
+  ur_sim:
+    image: universalrobots/ursim_e-series:5.21
+    stdin_open: true
+    tty: true
+    networks:
+      ursim_net:
+        ipv4_address: 192.168.56.101
+    privileged: true
+    restart: always
+    depends_on:
+      - browser
+    environment:
+      - DISPLAY=${DISPLAY}
+      - QT_X11_NO_MITSHM=1
+      - NVIDIA_DRIVER_CAPABILITIES=all
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ${XAUTHORITY:-$HOME/.Xauthority}:/root/.Xauthority
+      - ./urcaps:/urcaps
+      - ./programs:/ursim/programs
+
+  ur_driver_base:
+    image: ur_driver:base
+    build: 
+      context: .
+      dockerfile: ./docker/dockerfile
+      args:
+        ROS_DISTRO: ${ROS_DISTRO:?}
+      target: base
+    stdin_open: true
+    tty: open
+    networks:
+      ursim_net:
+        ipv4_address: 192.168.56.100      
+    privileged: true
+    environment:
+      - DISPLAY=${DISPLAY}
+      - QT_X11_NO_MITSHM=1
+      - NVIDIA_DRIVER_CAPABILITIES=all
+      - UR_TYPE=${UR_TYPE:?}
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ${XAUTHORITY:-$HOME/.Xauthority}:/root/.Xauthority
+
+  ur_driver_overlay:
+    extends: ur_driver_base
+    image: ur_driver:overlay
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      target: overlay
+
+  ur_driver_dev:
+    extends: ur_driver_overlay
+    image: ur_driver:dev
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      target: dev
+      args:
+        - UID=${UID:-1000}
+        - GID=${UID:-1000}
+        - USERNAME=${USERNAME:-devuser}
+    volumes:
+      # Mount the source code
+      # - ./ur_autonomy:/overlay_ws/src/ur_autonomy:rw
+      # - ./ur_worlds:/overlay_ws/src/ur_worlds:rw
+      # Mount colcon build artifacts for faster rebuilds
+      - ./.colcon/build/:/overlay_ws/build/:rw
+      - ./.colcon/install/:/overlay_ws/install/:rw
+      - ./.colcon/log/:/overlay_ws/log/:rw
+    user: ${USERNAME:-devuser}
+    command: sleep infinity
+
+  demo-world:
+    extends: ur_driver_overlay
+    command: ros2 launch ur_worlds ur_demo_world.launch.py
+
+  # Behavior demo using Python and py_trees
+  demo-behavior-py:
+    extends: ur_driver_overlay
+    command: >
+      ros2 launch ur_autonomy ur_demo_behavior_py.launch.py
+      tree_type:=${BT_TYPE:?}
+      enable_vision:=${ENABLE_VISION:?}
+      target_color:=${TARGET_COLOR:?}
+
+  # Behavior demo using C++ and BehaviorTree.CPP
+  demo-behavior-cpp:
+    extends: ur_driver_overlay
+    command: >
+      ros2 launch ur_autonomy ur_demo_behavior_cpp.launch.py
+      tree_type:=${BT_TYPE:?}
+      enable_vision:=${ENABLE_VISION:?}
+      target_color:=${TARGET_COLOR:?}  
+
+  browser:
+    image: jlesage/firefox
+    stdin_open: true
+    tty: true
+    networks:
+      browser_net:
+        ipv4_address: 192.168.57.100
+    restart: always
+    volumes:
+      - /docker/appdata/firefox:/config:rw
+    
+networks:
+  ursim_net:
+    ipam:
+      driver: default
+      config:
+        - subnet: "192.168.56.0/24"
+  browser_net:
+    ipam:
+      driver: default
+      config:
+        - subnet: "192.168.57.0/24"
