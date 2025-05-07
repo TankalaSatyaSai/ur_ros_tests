@@ -71,6 +71,8 @@ ENTRYPOINT [ "/entrypoint.sh" ]
 # Development Image #
 #####################
 
+# sudo apt-get install ros-${ROS_DISTRO}-ros2controlcli
+
 FROM overlay AS dev 
 
 ARG USERNAME=devuser
@@ -79,6 +81,9 @@ ARG GID=${UID}
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gdb gdbserver nano
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ros-${ROS_DISTRO}-ros2controlcli
 
 RUN touch /var/mail/ubuntu \
     && chown ubuntu /var/mail/ubuntu \

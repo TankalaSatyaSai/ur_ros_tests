@@ -8,15 +8,9 @@ services:
         ipv4_address: 192.168.56.101
     privileged: true
     restart: always
-    depends_on:
-      - browser
-    environment:
-      - DISPLAY=${DISPLAY}
-      - QT_X11_NO_MITSHM=1
-      - NVIDIA_DRIVER_CAPABILITIES=all
+    # depends_on:
+    #   - browser
     volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix:rw
-      - ${XAUTHORITY:-$HOME/.Xauthority}:/root/.Xauthority
       - ./urcaps:/urcaps
       - ./programs:/ursim/programs
 
@@ -32,23 +26,25 @@ services:
     tty: true
     networks:
       ursim_net:
-        ipv4_address: 192.168.56.80      
+        ipv4_address: 192.168.56.100      
     privileged: true
     environment:
-      - DISPLAY=${DISPLAY}
-      - QT_X11_NO_MITSHM=1
-      - NVIDIA_DRIVER_CAPABILITIES=all
-      - UR_TYPE=${UR_TYPE:?}
+      QT_X11_NO_MITSHM: 1
+      DISPLAY: $DISPLAY
+      NVIDIA_VISIBLE_DEVICES: all
+      NVIDIA_DRIVER_CAPABILITIES: all
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
-      - ${XAUTHORITY:-$HOME/.Xauthority}:/root/.Xauthority
+      - $HOME/.Xauthority:/tmp/.Xauthority
+    command: ros2 launch ur_robot_driver ur_control.launch.py ur_type:=ur5e robot_ip:=192.168.56.101  
+    # command: bash
 
   ur_driver_overlay:
     extends: ur_driver_base
     image: ur_driver:overlay
     networks:
       ursim_net:
-        ipv4_address: 192.168.56.81 
+        ipv4_address: 192.168.56.100     
     build:
       context: .
       dockerfile: docker/Dockerfile
@@ -59,7 +55,7 @@ services:
     image: ur_driver:dev
     networks:
       ursim_net:
-        ipv4_address: 192.168.56.82 
+        ipv4_address: 192.168.56.100   
     build:
       context: .
       dockerfile: docker/Dockerfile
@@ -77,7 +73,8 @@ services:
       - ./.colcon/install/:/overlay_ws/install/:rw
       - ./.colcon/log/:/overlay_ws/log/:rw
     user: ${USERNAME:-devuser}
-    command: sleep infinity
+    command: ros2 launch ur_robot_driver ur_control.launch.py ur_type:=ur5e robot_ip:=192.168.56.101  
+    # command: sleep infinity
 
   # demo-world:
   #   extends: ur_driver_overlay
@@ -101,16 +98,16 @@ services:
   #     enable_vision:=${ENABLE_VISION:?}
   #     target_color:=${TARGET_COLOR:?}  
 
-  browser:
-    image: jlesage/firefox
-    stdin_open: true
-    tty: true
-    networks:
-      browser_net:
-        ipv4_address: 192.168.57.100
-    restart: always
-    volumes:
-      - /docker/appdata/firefox:/config:rw
+  # browser:
+  #   image: jlesage/firefox
+  #   stdin_open: true
+  #   tty: true
+  #   networks:
+  #     browser_net:
+  #       ipv4_address: 192.168.57.100
+  #   restart: always
+  #   volumes:
+  #     - /docker/appdata/firefox:/config:rw
     
 networks:
   ursim_net:
@@ -118,8 +115,8 @@ networks:
       driver: default
       config:
         - subnet: "192.168.56.0/24"
-  browser_net:
-    ipam:
-      driver: default
-      config:
-        - subnet: "192.168.57.0/24"
+  # ur_driver_net:
+  #   ipam:
+  #     driver: default
+  #     config:
+  #       - subnet: "192.168.57.0/24"
