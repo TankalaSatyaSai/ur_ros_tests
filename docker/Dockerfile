@@ -9,14 +9,22 @@ FROM ros:${ROS_DISTRO} AS base
 LABEL maintainer="TankalaSatyaSai<satyasai2004.edu@gmail.com"
 
 ENV ROS_DISTRO=${ROS_DISTRO}
+ENV DEBIAN_FRONTEND=noninteractive
 
 SHELL ["/bin/bash", "-c"]
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     curl git libcanberra-gtk-module libcanberra-gtk3-module fuse3 libfuse2 libqt5svg5-dev \
+    xfce4 xfce4-goodies x11vnc xvfb wget net-tools \
     python3-pip python3-opencv python3-vcstool python3-tk python3-pyqt5.qtwebengine && \
     apt-get clean
+
+RUN git clone https://github.com/novnc/noVNC.git /opt/noVNC && \
+    git clone https://github.com/novnc/websockify /opt/noVNC/utils/websockify
+
+COPY ./docker/start.sh /start.sh
+RUN chmod +x /start.sh
 
 RUN pip3 install --break-system-packages matplotlib transforms3d
 

@@ -29,15 +29,15 @@ services:
         ipv4_address: 192.168.56.100      
     privileged: true
     environment:
-      QT_X11_NO_MITSHM: 1
+      # QT_X11_NO_MITSHM: 1
       DISPLAY: $DISPLAY
       NVIDIA_VISIBLE_DEVICES: all
       NVIDIA_DRIVER_CAPABILITIES: all
-    volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix:rw
-      - $HOME/.Xauthority:/tmp/.Xauthority
-    command: ros2 launch ur_robot_driver ur_control.launch.py ur_type:=ur5e robot_ip:=192.168.56.101  
-    # command: bash
+    # volumes:
+      # - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      # - $HOME/.Xauthority:/tmp/.Xauthority
+    # command: ros2 launch ur_robot_driver ur_control.launch.py ur_type:=ur5e robot_ip:=192.168.56.101  
+    command: ["/start.sh"]
 
   ur_driver_overlay:
     extends: ur_driver_base
